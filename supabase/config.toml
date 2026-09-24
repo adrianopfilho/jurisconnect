@@ -106,7 +106,7 @@ enabled = true
 # Port to use for the email testing server web interface.
 port = 54324
 # Uncomment to expose additional ports for testing user applications that send emails.
-# smtp_port = 54325
+smtp_port = 54325
 # pop3_port = 54326
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
@@ -155,7 +155,7 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "http://localhost:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.

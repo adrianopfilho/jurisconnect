@@ -24,6 +24,11 @@ const eslintConfig = [
     },
   },
   {
+    // Scripts de linha de comando imprimem no terminal.
+    files: ["scripts/**"],
+    rules: { "no-console": "off" },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",

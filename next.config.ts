@@ -1,5 +1,12 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {/* config options here */};
+import { staticSecurityHeaders } from "./src/lib/security/headers";
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: staticSecurityHeaders }];
+  },
+};
 
 export default nextConfig;

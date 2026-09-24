@@ -1,1 +1,131 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Identidade visual JurisConnect
+ * Azul-marinho #0F1E3D (primária) e dourado #B8955A (destaques) sobre fundos neutros.
+ */
+:root {
+  --radius: 0.5rem;
+
+  --brand-navy: #0f1e3d;
+  --brand-gold: #b8955a;
+
+  --background: #f7f6f3;
+  --foreground: #141b2d;
+  --card: #ffffff;
+  --card-foreground: #141b2d;
+  --popover: #ffffff;
+  --popover-foreground: #141b2d;
+  --primary: #0f1e3d;
+  --primary-foreground: #ffffff;
+  --secondary: #eceae4;
+  --secondary-foreground: #0f1e3d;
+  --muted: #efede8;
+  --muted-foreground: #5b6272;
+  --accent: #b8955a;
+  --accent-foreground: #0f1e3d;
+  --destructive: #b42318;
+  --border: #e2dfd8;
+  --input: #d9d5cc;
+  --ring: #b8955a;
+
+  --sidebar: #0f1e3d;
+  --sidebar-foreground: #e8e6e1;
+  --sidebar-primary: #b8955a;
+  --sidebar-primary-foreground: #0f1e3d;
+  --sidebar-accent: #1a2b4f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1f3158;
+  --sidebar-ring: #b8955a;
+}
+
+.dark {
+  --background: #0a1428;
+  --foreground: #e8e6e1;
+  --card: #101d37;
+  --card-foreground: #e8e6e1;
+  --popover: #101d37;
+  --popover-foreground: #e8e6e1;
+  --primary: #c9a96e;
+  --primary-foreground: #0f1e3d;
+  --secondary: #1a2744;
+  --secondary-foreground: #e8e6e1;
+  --muted: #16233f;
+  --muted-foreground: #9aa3b5;
+  --accent: #b8955a;
+  --accent-foreground: #0f1e3d;
+  --destructive: #e5484d;
+  --border: #22304d;
+  --input: #2a3a5c;
+  --ring: #c9a96e;
+
+  --sidebar: #08101f;
+  --sidebar-foreground: #e8e6e1;
+  --sidebar-primary: #c9a96e;
+  --sidebar-primary-foreground: #0f1e3d;
+  --sidebar-accent: #16233f;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #1a2744;
+  --sidebar-ring: #c9a96e;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-playfair), ui-serif, Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-navy: var(--brand-navy);
+  --color-gold: var(--brand-gold);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading tracking-tight;
+  }
+}

@@ -21,11 +21,11 @@ export async function signIn(page: Page, email: string, password: string) {
 
 /** Espera a navegação; se o formulário exibir um erro, falha mostrando a mensagem. */
 export async function expectNavigation(page: Page, url: RegExp) {
-  const alert = page.getByRole("alert");
-  await Promise.race([
-    page.waitForURL(url, { timeout: 15_000 }),
-    alert.first().waitFor({ timeout: 15_000 }),
-  ]);
+  // Somente o Alert da aplicação (o anunciador de rotas do Next.js também usa role="alert").
+  const alert = page.locator('[data-slot="alert"][role="alert"]');
+  await expect
+    .poll(async () => url.test(page.url()) || (await alert.count()) > 0, { timeout: 15_000 })
+    .toBe(true);
   if (await alert.count())
     throw new Error(`Erro exibido na tela: ${await alert.first().innerText()}`);
   await expect(page).toHaveURL(url);

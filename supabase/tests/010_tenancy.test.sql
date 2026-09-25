@@ -2,7 +2,7 @@
 begin;
 \ir helpers/setup.psql
 
-select plan(41);
+select plan(42);
 
 select tests.seed_scenario();
 
@@ -19,12 +19,18 @@ select is(
 select isnt(tests.tenant_of('admin.a@exemplo.test'), tests.tenant_of('admin.b@exemplo.test'),
   'cada autocadastro cria um escritório novo');
 
-select throws_ok(
-  $$ insert into auth.users (id, email, raw_app_meta_data, raw_user_meta_data)
-     values (gen_random_uuid(), 'sem.escritorio@exemplo.test', '{}', '{}') $$,
-  'P0001',
-  'Cadastro público exige o nome do escritório.',
-  'autocadastro sem nome do escritório é rejeitado'
+-- O Auth grava app_metadata depois do INSERT: a decisão não pode depender dele.
+select tests.create_user('sem.escritorio@exemplo.test');
+update auth.users set raw_app_meta_data = '{"provider": "email"}' where email = 'sem.escritorio@exemplo.test';
+select is(
+  (select count(*)::int from public.tenant_members where user_id = tests.uid('sem.escritorio@exemplo.test')),
+  0,
+  'cadastro sem nome do escritório não cria escritório nem vínculo'
+);
+select isnt(
+  (select id from public.profiles where email = 'sem.escritorio@exemplo.test'),
+  null,
+  'todo usuário novo ganha um perfil'
 );
 
 select tests.create_user('convidado@exemplo.test');

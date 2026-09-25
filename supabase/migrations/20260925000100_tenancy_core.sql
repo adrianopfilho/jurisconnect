@@ -255,11 +255,13 @@ create trigger tenant_members_freeze_identity
 
 -- -----------------------------------------------------------------------------
 -- Cadastro: novo usuário
---  * Autocadastro (sem app_metadata.invited) cria SOMENTE um escritório novo,
---    com o usuário como admin. Exige user_metadata.office_name.
---  * Usuários convidados são criados pelo servidor (service_role) com
---    app_metadata.invited = true; o vínculo nasce ao aceitar o convite.
---  app_metadata não pode ser alterado pelo próprio usuário.
+--  * Todo usuário ganha um perfil.
+--  * Autocadastro (user_metadata.office_name informado) cria SOMENTE um
+--    escritório NOVO, com o usuário como admin.
+--  * Sem office_name (usuários convidados, criados pelo servidor) não há
+--    escritório nem vínculo: o vínculo só nasce em accept_invitation().
+--  Assim, nenhum dado de cadastro permite entrar num escritório existente.
+--  (O app_metadata não serve para esta decisão: o Auth o grava depois do INSERT.)
 -- -----------------------------------------------------------------------------
 create function private.slugify(p_text text) returns text
 language sql
@@ -285,7 +287,6 @@ as $$
 declare
   v_full_name text := btrim(coalesce(new.raw_user_meta_data ->> 'full_name', ''));
   v_office_name text := btrim(coalesce(new.raw_user_meta_data ->> 'office_name', ''));
-  v_invited boolean := coalesce((new.raw_app_meta_data ->> 'invited')::boolean, false);
   v_tenant_id uuid;
 begin
   if char_length(v_full_name) < 2 then
@@ -295,13 +296,8 @@ begin
   insert into public.profiles (id, full_name, email)
   values (new.id, v_full_name, lower(new.email));
 
-  if v_invited then
-    return new;
-  end if;
-
   if char_length(v_office_name) < 2 then
-    raise exception 'Cadastro público exige o nome do escritório.'
-      using errcode = 'P0001', hint = 'office_name_required';
+    return new;
   end if;
 
   insert into public.tenants (name, slug, created_by)

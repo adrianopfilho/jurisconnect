@@ -20,8 +20,7 @@ begin
     '00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', p_email,
     extensions.crypt('Exemplo@Senha2026', extensions.gen_salt('bf')), now(),
     '', '', '', '',
-    jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email'))
-      || case when p_office_name is null then '{"invited": true}'::jsonb else '{}'::jsonb end,
+    jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')),
     jsonb_strip_nulls(jsonb_build_object('full_name', p_full_name, 'office_name', p_office_name)),
     now(), now()
   );

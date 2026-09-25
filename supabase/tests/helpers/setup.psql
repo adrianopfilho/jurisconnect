@@ -24,7 +24,7 @@ begin
   values (
     v_id,
     p_email,
-    case when p_office_name is null then '{"invited": true}'::jsonb else '{}'::jsonb end,
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
     jsonb_strip_nulls(jsonb_build_object('full_name', split_part(p_email, '@', 1), 'office_name', p_office_name))
   );
   return v_id;

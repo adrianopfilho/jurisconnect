@@ -19,9 +19,21 @@ export async function signIn(page: Page, email: string, password: string) {
   await page.getByRole("button", { name: "Entrar" }).click();
 }
 
+/** Espera a navegação; se o formulário exibir um erro, falha mostrando a mensagem. */
+export async function expectNavigation(page: Page, url: RegExp) {
+  const alert = page.getByRole("alert");
+  await Promise.race([
+    page.waitForURL(url, { timeout: 15_000 }),
+    alert.first().waitFor({ timeout: 15_000 }),
+  ]);
+  if (await alert.count())
+    throw new Error(`Erro exibido na tela: ${await alert.first().innerText()}`);
+  await expect(page).toHaveURL(url);
+}
+
 /** Cadastra o MFA na tela /mfa e devolve o segredo TOTP. */
 export async function enrollMfa(page: Page): Promise<{ secret: string; code: string }> {
-  await expect(page).toHaveURL(/\/mfa/);
+  await expectNavigation(page, /\/mfa/);
   const secret = (await page.getByTestId("totp-secret").textContent())?.trim() ?? "";
   expect(secret).not.toBe("");
   const code = await totpCode(secret);

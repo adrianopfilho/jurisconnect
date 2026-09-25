@@ -42,7 +42,6 @@ export async function acceptInvitationNewUserAction(
     email: invitation.email,
     password,
     email_confirm: true,
-    app_metadata: { invited: true },
     user_metadata: {
       full_name: fullName,
       terms_version: TERMS_VERSION,
@@ -51,6 +50,7 @@ export async function acceptInvitationNewUserAction(
   });
 
   if (createError || !created.user) {
+    console.error("Falha ao criar usuário convidado:", createError?.code ?? "sem código");
     if (createError?.code === "weak_password") {
       return fail("Senha fraca.", { password: "A senha não atende à política de segurança." });
     }
@@ -63,7 +63,10 @@ export async function acceptInvitationNewUserAction(
     p_ip: ip,
     p_user_agent: userAgent,
   });
-  if (acceptError) return fail(INVALID);
+  if (acceptError) {
+    console.error("Falha ao aceitar convite:", acceptError.hint ?? acceptError.code);
+    return fail(INVALID);
+  }
 
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({

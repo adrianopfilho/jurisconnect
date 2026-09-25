@@ -13,6 +13,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
+  timeout: 60_000,
   use: {
     baseURL,
     locale: "pt-BR",
@@ -25,7 +26,9 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], launchOptions: { executablePath } },
     },
     {
+      // Fluxos com Supabase rodam só no desktop (evita consumir o rate limit duas vezes).
       name: "mobile",
+      testIgnore: "auth/**",
       use: { ...devices["Pixel 7"], launchOptions: { executablePath } },
     },
   ],

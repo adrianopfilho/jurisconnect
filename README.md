@@ -37,6 +37,26 @@ pnpm dev
 | `pnpm db:check`                   | Verifica se toda tabela nova tem RLS e política na mesma migration |
 | `pnpm db:types`                   | Gera os tipos TypeScript do banco                                  |
 
+### Usuários de exemplo (seed)
+
+`pnpm db:reset` carrega dados **fictícios** (`supabase/seed.sql`), todos com a senha
+`Exemplo@Senha2026`:
+
+| E-mail                             | Escritório                      | Perfil        |
+| ---------------------------------- | ------------------------------- | ------------- |
+| `socia@modelo.test`                | Modelo Advocacia (fictício)     | Administrador |
+| `advogado@modelo.test`             | Modelo Advocacia (fictício)     | Advogado      |
+| `estagiaria@modelo.test`           | Modelo Advocacia (fictício)     | Estagiário    |
+| `financeiro@modelo.test`           | Modelo Advocacia (fictício)     | Financeiro    |
+| `recepcao@modelo.test`             | Modelo Advocacia (fictício)     | Recepção      |
+| `dpo@modelo.test`                  | Modelo Advocacia (fictício)     | DPO           |
+| `socio@exemplo-associados.test`    | Exemplo & Associados (fictício) | Administrador |
+| `advogada@exemplo-associados.test` | Exemplo & Associados (fictício) | Advogado      |
+| `cliente@pessoa.test`              | ambos                           | Cliente       |
+
+Administradores e advogados cadastram o MFA (TOTP) no primeiro login. Os e-mails (confirmação,
+convites, avisos de bloqueio) chegam no Mailpit local: http://127.0.0.1:54324.
+
 ### pgTAP sem Docker
 
 O fluxo oficial é `supabase test db`. Onde não há Docker, `pnpm db:test:local` cria um banco
@@ -91,3 +111,5 @@ e2e/             testes Playwright
 - A `SUPABASE_SERVICE_ROLE_KEY` só é lida em `src/lib/env/server.ts`/`src/lib/supabase/admin.ts`,
   protegidos por `server-only` (o build falha se forem importados no client).
 - CSP com nonce por requisição e headers de segurança em todas as rotas.
+- Rate limiting e bloqueio de login usam o IP do primeiro valor de `X-Forwarded-For`: em produção,
+  a plataforma de hospedagem deve sobrescrever esse header (ex.: Vercel).

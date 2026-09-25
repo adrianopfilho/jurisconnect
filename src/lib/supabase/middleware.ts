@@ -37,7 +37,22 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
 
   // Não inserir código entre a criação do cliente e getClaims(): isso pode
   // causar logouts aleatórios difíceis de depurar.
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
 
-  return response;
+  return {
+    supabase,
+    claims: data?.claims ?? null,
+    /** Resposta atual (pode ser substituída quando cookies de sessão mudam). */
+    getResponse: () => response,
+  };
+}
+
+/** Redireciona preservando os cookies de sessão já definidos na resposta. */
+export function redirectWithCookies(url: URL, from: NextResponse): NextResponse {
+  const redirect = NextResponse.redirect(url);
+  from.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+  from.headers.forEach((value, key) => {
+    if (key.toLowerCase() === "cache-control") redirect.headers.set(key, value);
+  });
+  return redirect;
 }

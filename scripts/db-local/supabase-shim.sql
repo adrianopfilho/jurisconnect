@@ -32,16 +32,37 @@ create schema if not exists auth;
 
 grant usage on schema public, extensions, auth to anon, authenticated, service_role;
 
--- Tabela mínima de usuários (o Supabase real tem muitas outras colunas).
+-- Tabela mínima de usuários (o Supabase real tem outras colunas, todas com
+-- valor padrão ou anuláveis). Inclui as colunas usadas pelo seed.
 create table if not exists auth.users (
+  instance_id uuid,
   id uuid primary key default gen_random_uuid(),
-  email text unique,
+  aud varchar(255),
+  role varchar(255),
+  email varchar(255) unique,
+  encrypted_password varchar(255),
+  email_confirmed_at timestamptz,
+  confirmation_token varchar(255),
+  recovery_token varchar(255),
+  email_change_token_new varchar(255),
+  email_change varchar(255),
   raw_app_meta_data jsonb not null default '{}'::jsonb,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
-  email_confirmed_at timestamptz,
   banned_until timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table if not exists auth.identities (
+  id uuid primary key default gen_random_uuid(),
+  provider_id text not null,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  identity_data jsonb not null,
+  provider text not null,
+  last_sign_in_at timestamptz,
+  created_at timestamptz,
+  updated_at timestamptz,
+  unique (provider_id, provider)
 );
 
 grant select on auth.users to service_role;

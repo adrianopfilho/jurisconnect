@@ -13,22 +13,22 @@ select is(
   (select count(*)::int
      from pg_class c
      join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public'
+    where n.nspname in ('public', 'private')
       and c.relkind in ('r', 'p')
       and not c.relrowsecurity),
   0,
-  'todas as tabelas do schema public têm RLS habilitado'
+  'todas as tabelas dos schemas public e private têm RLS habilitado'
 );
 
 select is(
   (select count(*)::int
      from pg_class c
      join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public'
+    where n.nspname in ('public', 'private')
       and c.relkind in ('r', 'p')
       and not exists (select 1 from pg_policy p where p.polrelid = c.oid)),
   0,
-  'todas as tabelas do schema public têm ao menos uma política'
+  'todas as tabelas dos schemas public e private têm ao menos uma política'
 );
 
 select is(

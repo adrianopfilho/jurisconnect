@@ -47,3 +47,18 @@ test.describe("headers de segurança", () => {
     expect(violations).toEqual([]);
   });
 });
+
+test.describe("rotas protegidas", () => {
+  test("área interna exige login e preserva o destino", async ({ page }) => {
+    await page.goto("/app/usuarios");
+    await expect(page).toHaveURL(/\/login\?next=%2Fapp%2Fusuarios/);
+    await expect(page.getByRole("heading", { name: "Entrar" })).toBeVisible();
+  });
+
+  test("portal e MFA também exigem login", async ({ page }) => {
+    await page.goto("/portal");
+    await expect(page).toHaveURL(/\/login/);
+    await page.goto("/mfa");
+    await expect(page).toHaveURL(/\/login/);
+  });
+});

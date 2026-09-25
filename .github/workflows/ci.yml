@@ -12,22 +12,21 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  # Valores públicos de placeholder para build/testes (não são segredos).
-  NEXT_PUBLIC_SITE_URL: http://localhost:3000
-  NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
-  SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
-
 jobs:
   quality:
     name: Lint, typecheck e testes unitários
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # Valores públicos de placeholder (não são segredos).
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -43,32 +42,58 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Sobe o banco do Supabase local
+      - name: Sobe o banco do Supabase local (migrations + seed)
         run: pnpm exec supabase db start
       - name: Lint do schema
         run: pnpm exec supabase db lint --level error
       - name: Testes pgTAP
         run: pnpm exec supabase test db
+      - name: Tipos TypeScript sincronizados com as migrations
+        run: |
+          pnpm exec supabase gen types typescript --local > "$RUNNER_TEMP/database.types.ts"
+          pnpm exec prettier --stdin-filepath src/lib/supabase/database.types.ts \
+            < "$RUNNER_TEMP/database.types.ts" > "$RUNNER_TEMP/database.types.formatted.ts"
+          diff -u src/lib/supabase/database.types.ts "$RUNNER_TEMP/database.types.formatted.ts"
 
   e2e:
-    name: Testes e2e (Playwright)
+    name: Testes e2e (Playwright + Supabase)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Sobe o Supabase local (banco, Auth, API e Mailpit)
+        run: >
+          pnpm exec supabase start
+          -x studio,imgproxy,realtime,storage-api,edge-runtime,logflare,vector,supavisor,postgres-meta
+      - name: Variáveis de ambiente do Supabase local
+        run: |
+          eval "$(pnpm exec supabase status -o env)"
+          : "${API_URL:?}" "${ANON_KEY:?}" "${SERVICE_ROLE_KEY:?}"
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+          {
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "SMTP_HOST=127.0.0.1"
+            echo "SMTP_PORT=54325"
+            echo "SMTP_SECURE=false"
+            echo "SMTP_FROM=JurisConnect <nao-responda@jurisconnect.local>"
+            echo "E2E_SUPABASE=1"
+          } >> "$GITHUB_ENV"
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm build
       - run: pnpm e2e
@@ -84,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2

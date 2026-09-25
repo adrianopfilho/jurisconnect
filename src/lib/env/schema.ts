@@ -12,8 +12,22 @@ export const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 });
 
+/** Envio de e-mails transacionais (convites e avisos de segurança). */
+export const emailEnvSchema = z.object({
+  SMTP_HOST: z.string().min(1),
+  SMTP_PORT: z.coerce.number().int().positive(),
+  SMTP_SECURE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  SMTP_FROM: z.string().min(3),
+});
+
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
+export type EmailEnv = z.infer<typeof emailEnvSchema>;
 
 export function parseEnv<T extends z.ZodType>(
   schema: T,

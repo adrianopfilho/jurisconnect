@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+  <body
+    style="
+      margin: 0;
+      background: #f7f6f3;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #141b2d;
+    "
+  >
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding: 24px 0">
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="560"
+            cellpadding="0"
+            cellspacing="0"
+            style="background: #ffffff; border-radius: 8px; overflow: hidden"
+          >
+            <tr>
+              <td
+                style="
+                  background: #0f1e3d;
+                  padding: 20px 32px;
+                  color: #b8955a;
+                  font-family: Georgia, serif;
+                  font-size: 22px;
+                "
+              >
+                JurisConnect
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 32px">
+                <h1
+                  style="
+                    font-family: Georgia, serif;
+                    font-size: 20px;
+                    margin: 0 0 16px;
+                    color: #0f1e3d;
+                  "
+                >
+                  Confirme o novo e-mail
+                </h1>
+                <p>
+                  Confirme a alteração do e-mail da sua conta no JurisConnect para {{ .NewEmail }}.
+                </p>
+                <p style="margin: 24px 0">
+                  <a
+                    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change"
+                    style="
+                      background: #0f1e3d;
+                      color: #ffffff;
+                      padding: 12px 20px;
+                      border-radius: 6px;
+                      text-decoration: none;
+                    "
+                    >Confirmar alteração</a
+                  >
+                </p>
+                <p style="font-size: 13px; color: #5b6272">
+                  Se você não pediu esta alteração, avise o administrador do escritório.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 16px 32px; background: #efede8; font-size: 12px; color: #5b6272">
+                Mensagem automática. Não responda este e-mail.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

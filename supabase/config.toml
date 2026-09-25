@@ -242,6 +242,19 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Templates em português com link token_hash (fluxo SSR: /auth/confirm).
+[auth.email.template.confirmation]
+subject = "Confirme seu e-mail no JurisConnect"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Redefinição de senha do JurisConnect"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.email_change]
+subject = "Confirme a alteração de e-mail no JurisConnect"
+content_path = "./supabase/templates/email_change.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

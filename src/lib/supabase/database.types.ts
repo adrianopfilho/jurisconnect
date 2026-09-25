@@ -281,7 +281,10 @@ export type Database = {
         };
         Returns: string;
       };
-      auth_login_locked_until: { Args: { p_email: string }; Returns: string };
+      auth_login_locked_until: {
+        Args: { p_email: string; p_ip?: unknown };
+        Returns: string;
+      };
       auth_register_failure: {
         Args: { p_email: string; p_ip?: unknown; p_user_agent?: string };
         Returns: {

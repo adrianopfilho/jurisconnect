@@ -84,10 +84,13 @@ export async function signInAction(input: SignInInput): Promise<ActionResult> {
   const { email, password, next } = parsed.data;
   const admin = createAdminClient();
 
-  const { data: lockedUntil } = await admin.rpc("auth_login_locked_until", { p_email: email });
+  const { data: lockedUntil } = await admin.rpc("auth_login_locked_until", {
+    p_email: email,
+    p_ip: ip,
+  });
   if (lockedUntil) {
     return fail(
-      `Conta bloqueada temporariamente por excesso de tentativas. Tente novamente após ${formatDateTime(lockedUntil)}.`,
+      `Acesso bloqueado temporariamente nesta conexão por excesso de tentativas. Tente novamente após ${formatDateTime(lockedUntil)}.`,
     );
   }
 
@@ -111,7 +114,7 @@ export async function signInAction(input: SignInInput): Promise<ActionResult> {
     }
     if (failure?.locked_until) {
       return fail(
-        `Conta bloqueada temporariamente por excesso de tentativas. Tente novamente após ${formatDateTime(failure.locked_until)}.`,
+        `Acesso bloqueado temporariamente nesta conexão por excesso de tentativas. Tente novamente após ${formatDateTime(failure.locked_until)}.`,
       );
     }
     return fail("E-mail ou senha inválidos.");

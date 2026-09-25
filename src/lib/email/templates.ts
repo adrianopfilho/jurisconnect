@@ -67,7 +67,8 @@ export function accountLockedEmail(params: { lockedUntil: Date; resetUrl: string
   const html = layout(
     "Bloqueio temporário por tentativas de acesso",
     `<p>Detectamos 5 tentativas de login sem sucesso na sua conta. Por segurança,
-       o acesso ficará bloqueado até ${escapeHtml(until)}.</p>
+       novas tentativas a partir da mesma conexão ficarão bloqueadas até ${escapeHtml(until)}.
+       Seu acesso a partir de outras conexões continua normal.</p>
      <p>Se não foi você, recomendamos redefinir sua senha e avisar o administrador do escritório.</p>
      <p style="margin:24px 0">
        <a href="${escapeHtml(params.resetUrl)}" style="background:#0f1e3d;color:#ffffff;padding:12px 20px;border-radius:6px;text-decoration:none">Redefinir senha</a>
@@ -75,7 +76,7 @@ export function accountLockedEmail(params: { lockedUntil: Date; resetUrl: string
   );
 
   const text = [
-    `Detectamos 5 tentativas de login sem sucesso na sua conta. O acesso ficará bloqueado até ${until}.`,
+    `Detectamos 5 tentativas de login sem sucesso na sua conta. Novas tentativas a partir da mesma conexão ficarão bloqueadas até ${until}; seu acesso a partir de outras conexões continua normal.`,
     `Se não foi você, redefina sua senha: ${params.resetUrl}`,
   ].join("\n\n");
 

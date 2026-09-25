@@ -54,7 +54,7 @@ pnpm dev
 | `advogada@exemplo-associados.test` | Exemplo & Associados (fictício) | Advogado      |
 | `cliente@pessoa.test`              | ambos                           | Cliente       |
 
-Administradores e advogados cadastram o MFA (TOTP) no primeiro login. Os e-mails (confirmação,
+Administradores, advogados e o DPO cadastram o MFA (TOTP) no primeiro login. Os e-mails (confirmação,
 convites, avisos de bloqueio) chegam no Mailpit local: http://127.0.0.1:54324.
 
 ### pgTAP sem Docker
@@ -111,5 +111,6 @@ e2e/             testes Playwright
 - A `SUPABASE_SERVICE_ROLE_KEY` só é lida em `src/lib/env/server.ts`/`src/lib/supabase/admin.ts`,
   protegidos por `server-only` (o build falha se forem importados no client).
 - CSP com nonce por requisição e headers de segurança em todas as rotas.
-- Rate limiting e bloqueio de login usam o IP do primeiro valor de `X-Forwarded-For`: em produção,
-  a plataforma de hospedagem deve sobrescrever esse header (ex.: Vercel).
+- Bloqueio de login por **e-mail + IP** (5 falhas em 15 min bloqueiam aquela combinação por 15 min,
+  com aviso por e-mail ao titular). O IP vem só de header confiável: `x-real-ip` na Vercel, ou o
+  header definido em `TRUSTED_IP_HEADER` em outra hospedagem; sem isso o bloqueio vale por e-mail.

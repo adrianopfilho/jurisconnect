@@ -17,10 +17,10 @@ test("bloqueia a conta após 5 tentativas erradas, mesmo com a senha correta dep
   }
 
   await signIn(page, email, "Errada@5Senha");
-  await expect(page.getByText(/Conta bloqueada temporariamente/)).toBeVisible();
+  await expect(page.getByText(/Acesso bloqueado temporariamente/)).toBeVisible();
 
   await signIn(page, email, SEED_PASSWORD);
-  await expect(page.getByText(/Conta bloqueada temporariamente/)).toBeVisible();
+  await expect(page.getByText(/Acesso bloqueado temporariamente/)).toBeVisible();
   await expect(page).toHaveURL(/\/login/);
 
   await expect.poll(() => countEmails(email, "bloqueada temporariamente")).toBeGreaterThan(0);

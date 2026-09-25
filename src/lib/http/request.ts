@@ -2,15 +2,19 @@ import "server-only";
 
 import { headers } from "next/headers";
 
-import { parseClientIp } from "./ip";
+import { getClientIp } from "./ip";
 
 export type RequestMeta = { ip: string | undefined; userAgent: string | undefined };
 
-/** IP e user agent da requisição atual (para auditoria e rate limiting). */
+/** IP (de header confiável) e user agent da requisição atual, para auditoria e rate limiting. */
 export async function getRequestMeta(): Promise<RequestMeta> {
   const h = await headers();
   return {
-    ip: parseClientIp(h.get("x-forwarded-for"), h.get("x-real-ip")) ?? undefined,
+    ip:
+      getClientIp(h, {
+        VERCEL: process.env.VERCEL,
+        TRUSTED_IP_HEADER: process.env.TRUSTED_IP_HEADER,
+      }) ?? undefined,
     userAgent: h.get("user-agent")?.slice(0, 512) || undefined,
   };
 }

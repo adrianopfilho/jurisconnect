@@ -1,20 +1,24 @@
 -- =============================================================================
 -- Fase 1 · Proteção de autenticação: bloqueio por tentativas e rate limiting
 -- =============================================================================
---  * 5 falhas de login em 15 minutos bloqueiam a conta por 15 minutos.
---  * O admin do escritório pode desbloquear um membro.
---  * O e-mail é guardado apenas como hash (inclusive de e-mails inexistentes).
+--  * 5 falhas de login em 15 minutos bloqueiam por 15 minutos a combinação
+--    e-mail + IP de origem. Quem erra a senha de outra pessoa a partir do
+--    próprio IP não trava o acesso do titular, que entra de outro IP.
+--  * O titular é avisado por e-mail; o admin do escritório pode desbloquear.
+--  * E-mail e IP são guardados apenas como hash (inclusive de e-mails inexistentes).
 --  * Rate limiting por janela fixa para rotas de autenticação (e, nas próximas
 --    fases, de exportação).
 --  * Tabelas no schema private (fora da API) com RLS e política de negação.
 -- =============================================================================
 
 create table private.auth_throttle (
-  email_hash text primary key check (email_hash ~ '^[0-9a-f]{64}$'),
+  email_hash text not null check (email_hash ~ '^[0-9a-f]{64}$'),
+  source_hash text not null check (source_hash ~ '^[0-9a-f]{64}$'),
   failures integer not null default 0 check (failures >= 0),
   window_started_at timestamptz not null default now(),
   locked_until timestamptz,
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  primary key (email_hash, source_hash)
 );
 
 create table private.rate_limits (
@@ -58,10 +62,19 @@ as $$
   select encode(sha256(convert_to(lower(btrim(p_email)), 'UTF8')), 'hex')
 $$;
 
+-- Origem da tentativa (IP). Sem IP conhecido, todas caem na mesma origem.
+create function private.source_hash(p_ip inet) returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select encode(sha256(convert_to(coalesce(host(p_ip), 'desconhecido'), 'UTF8')), 'hex')
+$$;
+
 -- -----------------------------------------------------------------------------
 -- Bloqueio de login (service_role)
 -- -----------------------------------------------------------------------------
-create function public.auth_login_locked_until(p_email text) returns timestamptz
+create function public.auth_login_locked_until(p_email text, p_ip inet default null) returns timestamptz
 language sql
 stable
 security definer
@@ -70,6 +83,7 @@ as $$
   select t.locked_until
     from private.auth_throttle t
    where t.email_hash = private.email_hash(p_email)
+     and t.source_hash = private.source_hash(p_ip)
      and t.locked_until > now()
 $$;
 
@@ -85,14 +99,17 @@ as $$
 #variable_conflict use_column
 declare
   v_hash text := private.email_hash(p_email);
+  v_source text := private.source_hash(p_ip);
   v_row private.auth_throttle%rowtype;
   v_user_id uuid;
   v_tenant record;
 begin
-  insert into private.auth_throttle (email_hash) values (v_hash)
-  on conflict (email_hash) do nothing;
+  insert into private.auth_throttle (email_hash, source_hash) values (v_hash, v_source)
+  on conflict (email_hash, source_hash) do nothing;
 
-  select * into v_row from private.auth_throttle where email_hash = v_hash for update;
+  select * into v_row from private.auth_throttle
+   where email_hash = v_hash and source_hash = v_source
+     for update;
 
   -- Já bloqueado: não prolonga o bloqueio.
   if v_row.locked_until is not null and v_row.locked_until > now() then
@@ -119,7 +136,7 @@ begin
          window_started_at = v_row.window_started_at,
          locked_until = v_row.locked_until,
          updated_at = now()
-   where email_hash = v_hash;
+   where email_hash = v_hash and source_hash = v_source;
 
   select u.id into v_user_id from auth.users u where lower(u.email) = lower(btrim(p_email));
 
@@ -163,6 +180,7 @@ begin
     return;
   end if;
 
+  -- Login bem-sucedido prova a posse da conta: limpa os bloqueios de todas as origens.
   delete from private.auth_throttle where email_hash = private.email_hash(v_email);
 
   select p.active_tenant_id into v_tenant_id from public.profiles p where p.id = p_user_id;
@@ -179,7 +197,7 @@ begin
 end;
 $$;
 
--- Membros bloqueados do escritório ativo (tela de usuários do admin).
+-- Membros com login bloqueado a partir de alguma origem (tela do admin).
 create function public.locked_members()
 returns table (member_id uuid, locked_until timestamptz)
 language sql
@@ -187,13 +205,14 @@ stable
 security definer
 set search_path = ''
 as $$
-  select m.id, t.locked_until
+  select m.id, max(t.locked_until)
     from public.tenant_members m
     join public.profiles p on p.id = m.user_id
     join private.auth_throttle t on t.email_hash = private.email_hash(p.email)
    where m.tenant_id = private.current_tenant_id()
      and private.has_role(array['admin']::public.app_role[])
      and t.locked_until > now()
+   group by m.id
 $$;
 
 -- Desbloqueio manual pelo admin do escritório ativo.
@@ -266,7 +285,8 @@ revoke all on function
   private.lock_window(),
   private.lock_duration(),
   private.email_hash(text),
-  public.auth_login_locked_until(text),
+  private.source_hash(inet),
+  public.auth_login_locked_until(text, inet),
   public.auth_register_failure(text, inet, text),
   public.auth_register_success(uuid, inet, text),
   public.locked_members(),
@@ -275,7 +295,7 @@ revoke all on function
 from public, anon, authenticated;
 
 grant execute on function
-  public.auth_login_locked_until(text),
+  public.auth_login_locked_until(text, inet),
   public.auth_register_failure(text, inet, text),
   public.auth_register_success(uuid, inet, text),
   public.rate_limit_hit(text, integer, integer)

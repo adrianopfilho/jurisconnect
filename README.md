@@ -76,6 +76,28 @@ criar o schema `auth` ou objetos nele.
 Defina `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/caminho/do/chrome` para usar um navegador existente em
 vez de `pnpm exec playwright install chromium`.
 
+## Modo protótipo (demonstração navegável)
+
+Com `NEXT_PUBLIC_PROTOTYPE=true` o app roda **sem Supabase e sem nenhuma outra variável**, com
+dados fictícios, para validar layout e fluxos:
+
+```bash
+NEXT_PUBLIC_PROTOTYPE=true pnpm dev   # ou: pnpm build && pnpm start com a mesma variável
+```
+
+Abra http://localhost:3000 e clique em **Entrar na demonstração** (login de demonstração, sem senha).
+Telas: painel, clientes (lista e ficha), processos (lista e ficha com timeline), agenda de prazos,
+financeiro resumido e portal do cliente.
+
+Garantias:
+
+- As rotas ficam em `src/app/(prototype)/prototipo` e os dados em `src/features/<módulo>/mocks`.
+- Sem a variável, `/prototipo` responde 404 (middleware, layout e rotas verificam o modo).
+- Com a variável, o sistema real (`/app`, `/login`, `/portal`…) fica inacessível e nenhuma
+  chamada ao Supabase é feita; o e2e `e2e/prototype` falha se houver qualquer requisição a ele.
+- O ESLint impede importar `mocks` fora das páginas do protótipo e dos testes.
+- CPF continua mascarado por padrão; a CSP e os headers de segurança continuam ativos.
+
 ## Estrutura
 
 ```

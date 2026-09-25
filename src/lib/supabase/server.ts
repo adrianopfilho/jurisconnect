@@ -3,7 +3,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { publicEnv } from "@/lib/env/public";
+import { getPublicEnv } from "@/lib/env/public";
 import { getRequestMeta } from "@/lib/http/request";
 
 import { type Database } from "./database.types";
@@ -22,8 +22,8 @@ export async function createClient() {
   if (userAgent) forwarded["user-agent"] = userAgent;
 
   return createServerClient<Database>(
-    publicEnv.NEXT_PUBLIC_SUPABASE_URL,
-    publicEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    getPublicEnv().NEXT_PUBLIC_SUPABASE_URL,
+    getPublicEnv().NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       global: { headers: forwarded },
       cookies: {

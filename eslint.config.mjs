@@ -24,6 +24,25 @@ const eslintConfig = [
     },
   },
   {
+    // Dados fictícios só podem ser usados pelas páginas do modo protótipo e por testes.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/app/(prototype)/**", "src/features/*/mocks/**", "src/**/*.test.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/features/*/mocks", "@/features/*/mocks/*", "**/mocks", "**/mocks/*"],
+              message:
+                "Dados fictícios (mocks) só podem ser usados no modo protótipo: src/app/(prototype).",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Scripts de linha de comando imprimem no terminal.
     files: ["scripts/**"],
     rules: { "no-console": "off" },

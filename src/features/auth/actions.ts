@@ -10,7 +10,7 @@ import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { getSessionContext } from "@/lib/auth/session";
 import { accountLockedEmail } from "@/lib/email/templates";
 import { sendEmail } from "@/lib/email/send";
-import { publicEnv } from "@/lib/env/public";
+import { getPublicEnv } from "@/lib/env/public";
 import { formatDateTime } from "@/lib/config/locale";
 import { getRequestMeta } from "@/lib/http/request";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -47,7 +47,7 @@ export async function signUpAction(input: SignUpInput): Promise<ActionResult> {
     email,
     password,
     options: {
-      emailRedirectTo: `${publicEnv.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
+      emailRedirectTo: `${getPublicEnv().NEXT_PUBLIC_SITE_URL}/auth/confirm`,
       data: {
         full_name: fullName,
         office_name: officeName,
@@ -143,7 +143,7 @@ async function notifyAccountLocked(email: string, lockedUntil: Date) {
       email,
       accountLockedEmail({
         lockedUntil,
-        resetUrl: `${publicEnv.NEXT_PUBLIC_SITE_URL}/recuperar-senha`,
+        resetUrl: `${getPublicEnv().NEXT_PUBLIC_SITE_URL}/recuperar-senha`,
       }),
     );
   } catch {
@@ -195,7 +195,7 @@ export async function forgotPasswordAction(input: ForgotPasswordInput): Promise<
 
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${publicEnv.NEXT_PUBLIC_SITE_URL}/redefinir-senha`,
+    redirectTo: `${getPublicEnv().NEXT_PUBLIC_SITE_URL}/redefinir-senha`,
   });
 
   // Mesma resposta exista ou não a conta.

@@ -36,3 +36,14 @@ test("cliente vai para o portal e não acessa a área interna", async ({ page })
   await page.goto("/app");
   await expect(page).toHaveURL(/\/portal$/);
 });
+
+test("DPO precisa cadastrar o MFA antes de acessar a área interna", async ({ page }) => {
+  await signIn(page, "dpo@modelo.test", SEED_PASSWORD);
+  await expect(page).toHaveURL(/\/mfa/);
+  await expect(
+    page.getByRole("heading", { name: "Ative a verificação em dois fatores" }),
+  ).toBeVisible();
+
+  await page.goto("/app/auditoria");
+  await expect(page).toHaveURL(/\/mfa/);
+});

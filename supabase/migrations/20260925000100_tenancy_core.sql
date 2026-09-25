@@ -6,7 +6,7 @@
 --    JWT), para que desativar um membro corte o acesso imediatamente.
 --  * O "escritório ativo" do usuário fica em profiles.active_tenant_id e só pode
 --    ser alterado por public.set_active_tenant(), que valida o vínculo.
---  * Perfis admin e lawyer só têm acesso ao escritório com sessão MFA (aal2).
+--  * Perfis admin, lawyer e dpo só têm acesso ao escritório com sessão MFA (aal2).
 --  * Não há DELETE em nenhuma tabela: desativação/soft delete.
 --  * Privilégios de tabela são revogados e concedidos explicitamente, pois o
 --    Supabase concede ALL por padrão a anon/authenticated no schema public.
@@ -116,7 +116,7 @@ language sql
 immutable
 set search_path = ''
 as $$
-  select p_role in ('admin'::public.app_role, 'lawyer'::public.app_role)
+  select p_role in ('admin'::public.app_role, 'lawyer'::public.app_role, 'dpo'::public.app_role)
 $$;
 
 create function private.session_aal() returns text
@@ -216,6 +216,13 @@ security definer
 set search_path = ''
 as $$
 begin
+  if old.role = 'admin' and old.status = 'active'
+     and (new.role <> 'admin' or new.status <> 'active') then
+    -- Serializa alterações de admins do mesmo escritório: sem isso, dois
+    -- admins rebaixando um ao outro em paralelo deixariam o escritório sem admin.
+    perform pg_advisory_xact_lock(hashtextextended('tenant-admins:' || old.tenant_id::text, 0));
+  end if;
+
   if old.role = 'admin' and old.status = 'active'
      and (new.role <> 'admin' or new.status <> 'active')
      and not exists (

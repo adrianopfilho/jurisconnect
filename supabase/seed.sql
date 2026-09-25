@@ -2,7 +2,7 @@
 -- Seed do ambiente LOCAL (supabase db reset). TODOS OS DADOS SÃO FICTÍCIOS.
 -- Domínio reservado .test (RFC 2606): nenhum e-mail real é usado.
 -- Senha de todos os usuários de exemplo: Exemplo@Senha2026
--- Admins e advogados precisam cadastrar o MFA (TOTP) no primeiro login.
+-- Admins, advogados e o DPO precisam cadastrar o MFA (TOTP) no primeiro login.
 -- =============================================================================
 
 create or replace function pg_temp.seed_user(p_email text, p_full_name text, p_office_name text default null)

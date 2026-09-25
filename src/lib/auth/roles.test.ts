@@ -3,9 +3,10 @@ import { describe, expect, it } from "vitest";
 import { canInvite, invitableRoles, roleRequiresMfa } from "./roles";
 
 describe("regras de perfis", () => {
-  it("exige MFA somente para admin e advogado", () => {
+  it("exige MFA de admin, advogado e DPO", () => {
     expect(roleRequiresMfa("admin")).toBe(true);
     expect(roleRequiresMfa("lawyer")).toBe(true);
+    expect(roleRequiresMfa("dpo")).toBe(true);
     expect(roleRequiresMfa("intern")).toBe(false);
     expect(roleRequiresMfa("client")).toBe(false);
   });

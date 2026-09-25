@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 const HIGHLIGHTS = [
   { icon: ShieldCheck, text: "Dados isolados por escritório e protegidos por políticas no banco" },
-  { icon: Lock, text: "Verificação em dois fatores para sócios e advogados" },
+  { icon: Lock, text: "Verificação em dois fatores para sócios, advogados e encarregado (DPO)" },
   { icon: Users, text: "Equipe e clientes entram somente por convite" },
 ];
 

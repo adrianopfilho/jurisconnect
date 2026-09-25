@@ -34,7 +34,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
 
 /** Perfis que exigem MFA (TOTP) — espelha private.role_requires_mfa() no banco. */
 export function roleRequiresMfa(role: AppRole): boolean {
-  return role === "admin" || role === "lawyer";
+  return role === "admin" || role === "lawyer" || role === "dpo";
 }
 
 /** Espelha private.can_invite() no banco. */

@@ -63,7 +63,7 @@ select is((select count(*)::int from public.tenants), 1, 'cliente vê o próprio
 select tests.authenticate_as_anon();
 select throws_ok('select * from public.tenants', '42501', null, 'anônimo não tem acesso a escritórios');
 
--- MFA obrigatório para admin e lawyer
+-- MFA obrigatório para admin, lawyer e dpo
 select tests.authenticate_as('admin.a@exemplo.test', 'aal1');
 select is((select count(*)::int from public.tenants), 0, 'admin sem MFA (aal1) não acessa o escritório');
 

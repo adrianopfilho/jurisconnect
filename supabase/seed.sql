@@ -1,0 +1,4 @@
+-- Seed do ambiente local (supabase db reset).
+-- REGRA: todo dado de exemplo deve ser FICTÍCIO. Nunca usar nomes, CPFs,
+-- e-mails ou números de processo reais.
+-- Os dados de exemplo serão adicionados a partir da Fase 1.

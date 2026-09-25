@@ -1,10 +1,30 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13";
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
   public: {
     Tables: {
@@ -19,7 +39,7 @@ export type Database = {
           hash: string;
           id: number;
           ip: unknown;
-          metadata: NonNullable<Json>;
+          metadata: Json;
           prev_hash: string | null;
           tenant_id: string | null;
           user_agent: string | null;
@@ -34,7 +54,7 @@ export type Database = {
           hash: string;
           id?: never;
           ip?: unknown;
-          metadata?: NonNullable<Json>;
+          metadata?: Json;
           prev_hash?: string | null;
           tenant_id?: string | null;
           user_agent?: string | null;
@@ -49,7 +69,7 @@ export type Database = {
           hash?: string;
           id?: never;
           ip?: unknown;
-          metadata?: NonNullable<Json>;
+          metadata?: Json;
           prev_hash?: string | null;
           tenant_id?: string | null;
           user_agent?: string | null;
@@ -58,6 +78,7 @@ export type Database = {
           {
             foreignKeyName: "audit_logs_tenant_id_fkey";
             columns: ["tenant_id"];
+            isOneToOne: false;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
@@ -110,6 +131,7 @@ export type Database = {
           {
             foreignKeyName: "invitations_tenant_id_fkey";
             columns: ["tenant_id"];
+            isOneToOne: false;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
@@ -153,6 +175,7 @@ export type Database = {
           {
             foreignKeyName: "profiles_active_tenant_id_fkey";
             columns: ["active_tenant_id"];
+            isOneToOne: false;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
@@ -199,6 +222,7 @@ export type Database = {
           {
             foreignKeyName: "tenant_members_tenant_id_fkey";
             columns: ["tenant_id"];
+            isOneToOne: false;
             referencedRelation: "tenants";
             referencedColumns: ["id"];
           },
@@ -213,7 +237,7 @@ export type Database = {
           deleted_by: string | null;
           id: string;
           name: string;
-          settings: NonNullable<Json>;
+          settings: Json;
           slug: string;
           updated_at: string;
         };
@@ -225,7 +249,7 @@ export type Database = {
           deleted_by?: string | null;
           id?: string;
           name: string;
-          settings?: NonNullable<Json>;
+          settings?: Json;
           slug: string;
           updated_at?: string;
         };
@@ -237,7 +261,7 @@ export type Database = {
           deleted_by?: string | null;
           id?: string;
           name?: string;
-          settings?: NonNullable<Json>;
+          settings?: Json;
           slug?: string;
           updated_at?: string;
         };
@@ -295,7 +319,7 @@ export type Database = {
         }[];
       };
       locked_members: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           locked_until: string;
           member_id: string;
@@ -324,7 +348,7 @@ export type Database = {
         Returns: number;
       };
       my_memberships: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           is_active: boolean;
           requires_mfa: boolean;
@@ -355,7 +379,7 @@ export type Database = {
         }[];
       };
       verify_audit_chain: {
-        Args: Record<PropertyKey, never>;
+        Args: never;
         Returns: {
           checked: number;
           first_invalid_id: number;
@@ -485,6 +509,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "lawyer", "intern", "finance", "reception", "dpo", "client"],

@@ -1,13 +1,17 @@
 "use client";
 
 import {
+  Briefcase,
   Building2,
+  CalendarClock,
   ChevronsLeft,
   ChevronsRight,
   LayoutDashboard,
   Menu,
   ScrollText,
+  UserRound,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -18,17 +22,33 @@ import { Brand } from "@/components/layout/brand";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { IdleTimeoutGuard } from "@/features/auth/components/idle-timeout-guard";
-import { UserMenu } from "@/components/layout/user-menu";
 import { type AppRole } from "@/lib/auth/roles";
 import { cn } from "@/lib/utils";
 
-type NavItem = { href: string; label: string; icon: LucideIcon; roles?: readonly AppRole[] };
+const ICONS = {
+  dashboard: LayoutDashboard,
+  clients: UserRound,
+  cases: Briefcase,
+  agenda: CalendarClock,
+  finance: Wallet,
+  users: Users,
+  audit: ScrollText,
+} satisfies Record<string, LucideIcon>;
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/app", label: "Painel", icon: LayoutDashboard },
-  { href: "/app/usuarios", label: "Usuários", icon: Users, roles: ["admin", "lawyer"] },
-  { href: "/app/auditoria", label: "Auditoria", icon: ScrollText, roles: ["admin", "dpo"] },
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: keyof typeof ICONS;
+  roles?: readonly AppRole[];
+  /** Marca como ativo só no caminho exato (ex.: a página inicial da área). */
+  exact?: boolean;
+};
+
+/** Navegação da área interna real. */
+export const APP_NAV: NavItem[] = [
+  { href: "/app", label: "Painel", icon: "dashboard", exact: true },
+  { href: "/app/usuarios", label: "Usuários", icon: "users", roles: ["admin", "lawyer"] },
+  { href: "/app/auditoria", label: "Auditoria", icon: "audit", roles: ["admin", "dpo"] },
 ];
 
 const COLLAPSED_KEY = "jc:sidebar-collapsed";
@@ -42,24 +62,26 @@ export type ShellUser = {
 };
 
 function NavLinks({
+  nav,
   role,
   collapsed,
   onNavigate,
 }: {
+  nav: NavItem[];
   role: AppRole;
   collapsed: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const items = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role));
+  const items = nav.filter((item) => !item.roles || item.roles.includes(role));
 
   return (
     <nav aria-label="Navegação principal" className="grid gap-1">
-      {items.map(({ href, label, icon: Icon }) => {
-        const active =
-          href === "/app"
-            ? pathname === href
-            : pathname === href || pathname.startsWith(`${href}/`);
+      {items.map(({ href, label, icon, exact }) => {
+        const Icon = ICONS[icon];
+        const active = exact
+          ? pathname === href
+          : pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={href}
@@ -82,7 +104,26 @@ function NavLinks({
   );
 }
 
-export function AppShell({ user, children }: { user: ShellUser; children: React.ReactNode }) {
+export function AppShell({
+  user,
+  nav,
+  userMenu,
+  switchTenantHref = "/escritorios",
+  banner,
+  guard,
+  children,
+}: {
+  user: ShellUser;
+  nav: NavItem[];
+  /** Menu do usuário (real ou de demonstração). */
+  userMenu: React.ReactNode;
+  switchTenantHref?: string;
+  /** Faixa exibida acima do cabeçalho (ex.: aviso do modo protótipo). */
+  banner?: React.ReactNode;
+  /** Componentes de sessão (ex.: logout por inatividade). */
+  guard?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -117,7 +158,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
           <Brand compact={collapsed} className="text-sidebar-foreground" />
         </div>
         <div className="flex-1 overflow-y-auto px-2 py-4">
-          <NavLinks role={user.role} collapsed={collapsed} />
+          <NavLinks nav={nav} role={user.role} collapsed={collapsed} />
         </div>
         <div className="border-t border-sidebar-border p-2">
           <Button
@@ -141,12 +182,18 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
             <Brand className="text-sidebar-foreground" />
           </div>
           <div className="px-2">
-            <NavLinks role={user.role} collapsed={false} onNavigate={() => setMobileOpen(false)} />
+            <NavLinks
+              nav={nav}
+              role={user.role}
+              collapsed={false}
+              onNavigate={() => setMobileOpen(false)}
+            />
           </div>
         </DialogContent>
       </Dialog>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        {banner}
         <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
           <Button
             variant="ghost"
@@ -164,7 +211,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
             </span>
             {user.tenantCount > 1 && (
               <Link
-                href="/escritorios"
+                href={switchTenantHref}
                 className="shrink-0 text-xs text-muted-foreground underline-offset-4 hover:underline"
               >
                 trocar
@@ -172,12 +219,12 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
             )}
           </div>
           <ThemeToggle />
-          <UserMenu user={user} />
+          {userMenu}
         </header>
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
 
-      <IdleTimeoutGuard />
+      {guard}
     </div>
   );
 }

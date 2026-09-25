@@ -1,6 +1,9 @@
 /** Testes que dependem do Supabase local (Auth + Mailpit) só rodam com E2E_SUPABASE=1. */
 export const hasSupabase = process.env.E2E_SUPABASE === "1";
 
+/** Build do modo protótipo (NEXT_PUBLIC_PROTOTYPE=true, sem Supabase). */
+export const isPrototypeRun = process.env.E2E_PROTOTYPE === "1";
+
 export const MAILPIT_URL = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
 
 /** Senha dos usuários fictícios do seed (supabase/seed.sql). */

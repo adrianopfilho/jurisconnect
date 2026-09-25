@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+import { isPrototypeRun } from "./support/env";
+
+// No build do protótipo o sistema real fica inacessível (coberto em e2e/prototype).
+test.skip(isPrototypeRun, "roda apenas no build normal");
+
 test.describe("página inicial", () => {
   test("carrega em português com a identidade do JurisConnect", async ({ page }) => {
     await page.goto("/");
@@ -60,5 +65,22 @@ test.describe("rotas protegidas", () => {
     await expect(page).toHaveURL(/\/login/);
     await page.goto("/mfa");
     await expect(page).toHaveURL(/\/login/);
+  });
+});
+
+test.describe("modo protótipo desligado", () => {
+  test("rotas de demonstração não existem fora do modo protótipo", async ({ page, request }) => {
+    for (const path of [
+      "/prototipo",
+      "/prototipo/entrar",
+      "/prototipo/entrar/escritorio",
+      "/prototipo/portal",
+    ]) {
+      const response = await request.get(path, { maxRedirects: 0 });
+      expect(response.status(), path).toBe(404);
+      expect(response.headers()["set-cookie"] ?? "", path).not.toContain("jc_demo_perfil");
+    }
+    const page404 = await page.goto("/prototipo/entrar");
+    expect(page404?.status()).toBe(404);
   });
 });

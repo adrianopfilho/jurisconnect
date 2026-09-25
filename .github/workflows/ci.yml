@@ -104,6 +104,32 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  e2e-prototype:
+    name: Testes e2e do modo protótipo (sem Supabase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Nenhuma variável do Supabase: o protótipo precisa funcionar sem backend.
+      NEXT_PUBLIC_PROTOTYPE: "true"
+      E2E_PROTOTYPE: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - run: pnpm exec playwright test e2e/prototype
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-prototype
+          path: playwright-report/
+          retention-days: 7
+
   secrets:
     name: Varredura de segredos
     runs-on: ubuntu-latest

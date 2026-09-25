@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { isPrototypeMode } from "@/lib/prototype/mode";
 
 const HIGHLIGHTS = [
   { icon: ShieldCheck, text: "Dados isolados por escritório e protegidos por políticas no banco" },
@@ -27,12 +28,20 @@ export default function Home() {
           Gestão jurídica para escritórios de advocacia, com segurança e conformidade com a LGPD.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg">
-            <Link href="/login">Entrar</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/cadastro">Cadastrar escritório</Link>
-          </Button>
+          {isPrototypeMode() ? (
+            <Button asChild size="lg">
+              <Link href="/prototipo/entrar">Entrar na demonstração</Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild size="lg">
+                <Link href="/login">Entrar</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="/cadastro">Cadastrar escritório</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
       <ul className="grid max-w-3xl gap-3 sm:grid-cols-3">

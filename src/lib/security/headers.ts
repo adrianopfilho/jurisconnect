@@ -6,14 +6,17 @@
 
 type CspOptions = {
   nonce: string;
-  supabaseUrl: string;
+  /** Origem do Supabase liberada para conexões; null no modo protótipo (sem backend). */
+  supabaseUrl: string | null;
   isDev: boolean;
 };
 
 export function buildContentSecurityPolicy({ nonce, supabaseUrl, isDev }: CspOptions): string {
-  const supabase = new URL(supabaseUrl);
-  const supabaseHttp = supabase.origin;
-  const supabaseWs = `${supabase.protocol === "https:" ? "wss:" : "ws:"}//${supabase.host}`;
+  const supabase = supabaseUrl ? new URL(supabaseUrl) : null;
+  const supabaseHttp = supabase ? [supabase.origin] : [];
+  const supabaseWs = supabase
+    ? [`${supabase.protocol === "https:" ? "wss:" : "ws:"}//${supabase.host}`]
+    : [];
 
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
@@ -27,10 +30,10 @@ export function buildContentSecurityPolicy({ nonce, supabaseUrl, isDev }: CspOpt
     ],
     // Atributos style inline são usados por Radix/shadcn (posicionamento de popovers).
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:", supabaseHttp],
+    "img-src": ["'self'", "data:", "blob:", ...supabaseHttp],
     "font-src": ["'self'"],
-    "connect-src": ["'self'", supabaseHttp, supabaseWs],
-    "frame-src": ["'self'", "blob:", supabaseHttp],
+    "connect-src": ["'self'", ...supabaseHttp, ...supabaseWs],
+    "frame-src": ["'self'", "blob:", ...supabaseHttp],
     "worker-src": ["'self'", "blob:"],
     "object-src": ["'none'"],
     "base-uri": ["'self'"],

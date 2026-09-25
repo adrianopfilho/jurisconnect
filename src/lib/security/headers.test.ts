@@ -55,6 +55,15 @@ describe("Content-Security-Policy", () => {
   });
 });
 
+describe("CSP no modo protótipo", () => {
+  it("sem Supabase, só a própria origem é liberada para conexões", () => {
+    const csp = parse(buildContentSecurityPolicy({ nonce: "n", supabaseUrl: null, isDev: false }));
+    expect(csp["connect-src"]).toEqual(["'self'"]);
+    expect(csp["img-src"]).toEqual(["'self'", "data:", "blob:"]);
+    expect(csp["script-src"]).toContain("'nonce-n'");
+  });
+});
+
 describe("headers estáticos", () => {
   it("inclui HSTS, X-Frame-Options e Referrer-Policy", () => {
     const keys = staticSecurityHeaders.map((h) => h.key);

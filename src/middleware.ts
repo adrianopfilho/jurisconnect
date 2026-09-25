@@ -1,7 +1,13 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-import { publicEnv } from "@/lib/env/public";
+import { getPublicEnv } from "@/lib/env/public";
 import { IDLE_COOKIE, isIdleExpired } from "@/lib/auth/idle";
+import {
+  DEMO_PROFILE_COOKIE,
+  isPrototypeMode,
+  parseDemoProfile,
+  PROTOTYPE_BASE,
+} from "@/lib/prototype/mode";
 import { buildContentSecurityPolicy, generateNonce } from "@/lib/security/headers";
 import { redirectWithCookies, updateSession } from "@/lib/supabase/middleware";
 
@@ -20,11 +26,30 @@ const GUEST_ONLY = ["/login", "/cadastro"];
 const matches = (path: string, prefixes: string[]) =>
   prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
 
+/** Rotas do sistema real, inexistentes no modo protótipo (sem backend). */
+const REAL_APP_PREFIXES = [
+  ...PROTECTED_PREFIXES,
+  ...GUEST_ONLY,
+  "/recuperar-senha",
+  "/verificar-email",
+  "/convite",
+  "/auth",
+];
+
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const prototype = isPrototypeMode();
+
+  // Fora do modo protótipo as rotas de demonstração simplesmente não existem.
+  if (!prototype && matches(path, [PROTOTYPE_BASE])) {
+    // Reescreve para uma rota inexistente: o Next.js responde 404 com a página padrão.
+    return NextResponse.rewrite(new URL("/_prototipo-indisponivel", request.url));
+  }
+
   const nonce = generateNonce();
   const csp = buildContentSecurityPolicy({
     nonce,
-    supabaseUrl: publicEnv.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseUrl: prototype ? null : getPublicEnv().NEXT_PUBLIC_SUPABASE_URL,
     isDev: process.env.NODE_ENV === "development",
   });
 
@@ -33,8 +58,9 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
+  if (prototype) return prototypeMiddleware(request, requestHeaders, csp);
+
   const { supabase, claims, getResponse } = await updateSession(request, requestHeaders);
-  const path = request.nextUrl.pathname;
   const isProtected = matches(path, PROTECTED_PREFIXES);
 
   const finish = (response = getResponse()) => {
@@ -75,6 +101,29 @@ export async function middleware(request: NextRequest) {
     });
   }
   return finish(response);
+}
+
+/**
+ * Modo protótipo: nenhuma chamada ao Supabase. O sistema real fica inacessível
+ * e a área de demonstração exige apenas a escolha de um perfil fictício.
+ */
+function prototypeMiddleware(request: NextRequest, requestHeaders: Headers, csp: string) {
+  const path = request.nextUrl.pathname;
+  const withCsp = (response: NextResponse) => {
+    response.headers.set("Content-Security-Policy", csp);
+    return response;
+  };
+  const entry = new URL(`${PROTOTYPE_BASE}/entrar`, request.url);
+
+  if (matches(path, REAL_APP_PREFIXES)) return withCsp(NextResponse.redirect(entry));
+
+  const isDemoArea =
+    matches(path, [PROTOTYPE_BASE]) && !matches(path, [`${PROTOTYPE_BASE}/entrar`]);
+  if (isDemoArea && !parseDemoProfile(request.cookies.get(DEMO_PROFILE_COOKIE)?.value)) {
+    return withCsp(NextResponse.redirect(entry));
+  }
+
+  return withCsp(NextResponse.next({ request: { headers: requestHeaders } }));
 }
 
 export const config = {

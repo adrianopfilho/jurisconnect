@@ -9,7 +9,7 @@ import { requireActiveMember } from "@/lib/auth/session";
 import { generateToken, hashToken } from "@/lib/crypto/token";
 import { sendEmail } from "@/lib/email/send";
 import { invitationEmail } from "@/lib/email/templates";
-import { publicEnv } from "@/lib/env/public";
+import { getPublicEnv } from "@/lib/env/public";
 import { getRequestMeta } from "@/lib/http/request";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -73,7 +73,7 @@ export async function inviteMemberAction(input: InviteMemberInput): Promise<Acti
         tenantName: ctx.active.tenantName,
         inviterName: inviter?.full_name ?? "O administrador",
         role,
-        url: `${publicEnv.NEXT_PUBLIC_SITE_URL}/convite/${token}`,
+        url: `${getPublicEnv().NEXT_PUBLIC_SITE_URL}/convite/${token}`,
         expiresAt: new Date(invitation?.expires_at ?? Date.now() + 24 * 60 * 60 * 1000),
       }),
     );

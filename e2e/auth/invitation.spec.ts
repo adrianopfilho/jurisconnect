@@ -45,6 +45,10 @@ test("admin convida advogado, convite é aceito uma única vez e o acesso pode s
   await expect(reuse.getByText("Este convite já foi utilizado.")).toBeVisible();
   await anonymous.close();
 
+  // Advogado deixa a lista da equipe aberta (sessão ativa)
+  await guest.goto("/app/usuarios");
+  await expect(guest.getByTestId(`member-${admin.email}`)).toBeVisible();
+
   // Admin desativa o advogado: acesso cortado na próxima requisição
   await page.reload();
   const row = page.getByTestId(`member-${lawyerEmail}`);
@@ -54,8 +58,13 @@ test("admin convida advogado, convite é aceito uma única vez e o acesso pode s
   await page.getByRole("button", { name: "Confirmar" }).click();
   await expect(row).toContainText("Desativado");
 
-  // Sem vínculo ativo (e com login bloqueado no Auth), o acesso é cortado.
-  await guest.goto("/app");
+  // Mesma sessão, sem novo login: ao recarregar, o acesso já foi cortado
+  // (sem vínculo ativo e com o login bloqueado no Auth).
+  await guest.reload();
+  await expect(guest).toHaveURL(/\/(sem-acesso|login)/);
+  await expect(guest.getByTestId(`member-${admin.email}`)).toHaveCount(0);
+  await expect(guest.getByText(admin.officeName)).toHaveCount(0);
+  await guest.goto("/app/usuarios");
   await expect(guest).toHaveURL(/\/(sem-acesso|login)/);
   await guestContext.close();
 });
